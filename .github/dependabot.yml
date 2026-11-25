@@ -1,0 +1,29 @@
+# Dependabot ouvre une pull request quand une dépendance a une nouvelle
+# version : l'image de base (digest du Dockerfile), les actions (empreintes
+# de commit du workflow) et les paquets npm. Épingler sans mettre à jour
+# reviendrait à figer les failles.
+#
+# cooldown : on attend quelques jours avant de proposer une version toute
+# neuve ; les versions piégées sont en général repérées et retirées vite.
+version: 2
+updates:
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7

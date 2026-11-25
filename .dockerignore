@@ -23,3 +23,9 @@ eslint.config.mjs
 .prettierignore
 .nodemon.json
 .jestrc.json
+
+# Outils de la chaîne de confiance : pas utiles dans l'image
+.github
+scripts
+attaque
+analyses

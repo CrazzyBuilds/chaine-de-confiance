@@ -105,3 +105,6 @@ dist
 
 # Contrats générés par les tests Pact
 pacts/
+
+# Rapports générés en local (SBOM, scans)
+analyses/

@@ -26,4 +26,6 @@ fi
 rm -f "${TMPDIR:-/tmp}/cosign-$$.log"
 echo "signature valide : $IDENTITE"
 
-[ $# -gt 0 ] && exec docker run "$@" "$IMAGE"
+if [ $# -gt 0 ]; then
+	exec docker run "$@" "$IMAGE"
+fi

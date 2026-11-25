@@ -32,7 +32,7 @@ echo "== 3. L'attaquant signe son image, avec sa propre clé"
 COSIGN_PASSWORD= cosign generate-key-pair --output-key-prefix "$CLES/attaquant" >/dev/null 2>&1
 # --tlog-upload=false : on n'inscrit pas cette fausse signature dans le
 # journal public de Sigstore (c'est une démo).
-COSIGN_PASSWORD= cosign sign --yes --key "$CLES/attaquant.key" --tlog-upload=false \
+COSIGN_PASSWORD= cosign sign --yes --key "$CLES/attaquant.key" --use-signing-config=false --tlog-upload=false \
 	"$IMG@$(crane digest "$IMG:1.0")" >/dev/null 2>&1
 if cosign verify --key "$CLES/attaquant.pub" --insecure-ignore-tlog=true "$IMG:1.0" >/dev/null 2>&1; then
 	echo "(sa signature est valide... pour SA clé)"

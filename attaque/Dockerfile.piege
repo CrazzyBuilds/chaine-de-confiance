@@ -1,0 +1,6 @@
+# L'image piégée : la vraie API, plus une « charge » qui s'exécute au démarrage.
+# Ici elle se contente d'afficher les noms des variables d'environnement
+# qu'elle aurait pu envoyer à l'attaquant (mots de passe, tokens…).
+ARG ORIGINALE
+FROM ${ORIGINALE}
+CMD ["sh", "-c", "echo \"[piège] variables qui partiraient chez l'attaquant : $(env | cut -d= -f1 | sort | tr '\\n' ' ')\"; exec node dist/index.js"]

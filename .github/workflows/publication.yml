@@ -40,6 +40,7 @@ jobs:
     permissions:
       contents: read
       packages: write # pousser l'image sur GHCR
+      id-token: write # obtenir le jeton OIDC de GitHub, pour signer (keyless)
     steps:
       - name: Récupération du code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -72,9 +73,25 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publication
+        id: publication
         run: |
           docker tag "$IMAGE:$GITHUB_SHA" "$IMAGE:latest"
           docker push "$IMAGE:$GITHUB_SHA"
           docker push "$IMAGE:latest"
           # Le digest : l'empreinte du contenu publié, qui ne bouge jamais.
-          echo "Digest publié : $(docker inspect -f '{{index .RepoDigests 0}}' "$IMAGE:$GITHUB_SHA")" >> "$GITHUB_STEP_SUMMARY"
+          DIGEST=$(docker inspect -f '{{index .RepoDigests 0}}' "$IMAGE:$GITHUB_SHA" | cut -d@ -f2)
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "Digest publié : $DIGEST" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Installation de cosign
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+
+      # Signature keyless : pas de clé privée à garder. cosign présente le
+      # jeton OIDC de la CI (« je suis publication.yml de ce repo, sur main »)
+      # à Fulcio, l'autorité de Sigstore, qui délivre un certificat valable
+      # 10 minutes pour cette identité. La signature porte sur le digest (le
+      # contenu exact), et elle est inscrite dans Rekor, un journal public.
+      - name: Signature de l'image
+        env:
+          DIGEST: ${{ steps.publication.outputs.digest }}
+        run: cosign sign --yes "$IMAGE@$DIGEST"

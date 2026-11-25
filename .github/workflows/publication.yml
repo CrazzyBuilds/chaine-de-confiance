@@ -41,6 +41,7 @@ jobs:
       contents: read
       packages: write # pousser l'image sur GHCR
       id-token: write # obtenir le jeton OIDC de GitHub, pour signer (keyless)
+      attestations: write # enregistrer l'attestation de provenance
     steps:
       - name: Récupération du code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -95,3 +96,30 @@ jobs:
         env:
           DIGEST: ${{ steps.publication.outputs.digest }}
         run: cosign sign --yes "$IMAGE@$DIGEST"
+
+      # Le SBOM : la liste de tout ce que contient l'image (paquets Alpine,
+      # Node, modules npm). On le génère depuis l'image publiée, puis on le
+      # joint à l'image sous forme d'attestation signée (même identité keyless).
+      - name: Génération du SBOM
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: ${{ env.IMAGE }}@${{ steps.publication.outputs.digest }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: false
+          dependency-snapshot: false
+
+      - name: Attestation du SBOM
+        env:
+          DIGEST: ${{ steps.publication.outputs.digest }}
+        run: cosign attest --yes --type spdxjson --predicate sbom.spdx.json "$IMAGE@$DIGEST"
+
+      # La provenance (format SLSA) : « cette image a été construite à partir
+      # de tel commit, par tel workflow, lors de telle exécution ». Signée et
+      # poussée à côté de l'image ; se vérifie avec « gh attestation verify ».
+      - name: Attestation de provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.publication.outputs.digest }}
+          push-to-registry: true

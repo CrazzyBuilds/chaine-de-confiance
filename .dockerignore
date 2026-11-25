@@ -1,0 +1,25 @@
+# Généré localement : reconstruit dans l'image
+node_modules
+dist
+coverage
+pacts
+
+# Fichiers locaux, hors projet
+.git
+*.pdf
+compte-rendu.md
+
+# Tests : ne doivent pas être compilés dans l'image
+src/*.spec.ts
+src/sysinfo-client.ts
+
+# Inutiles au build : évite d'invalider le cache quand ils changent
+Dockerfile
+.dockerignore
+README.md
+LICENSE
+eslint.config.mjs
+.prettierrc.json
+.prettierignore
+.nodemon.json
+.jestrc.json
